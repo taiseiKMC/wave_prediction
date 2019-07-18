@@ -23,6 +23,7 @@ from lib import *
 
 data,data_max = getdata()
 
+#ハイパーパラメーターの読み込み
 with open("trial_params.dump", 'rb') as dmp:
     trial_params = pickle.load(dmp)
 
@@ -75,6 +76,7 @@ trainer.run()
 model.setdr(0.0)
 model.predictor.reset_state()
 
+#学習結果の保存
 serializers.save_npz("model.npz", model)
 
 #res = predicateTestAll(test, train, model, data_max)

@@ -47,6 +47,7 @@ def create_optimizer(trial, model):
     optimizer.add_hook(chainer.optimizer.WeightDecay(weight_decay))
     return optimizer
 
+#optunaが最小化する目的関数
 def objective(trial):
     seq_len = trial.suggest_int('seq_len', 10, 300)
     rate=6.0/8
@@ -64,6 +65,7 @@ def objective(trial):
     optimizer = create_optimizer(trial, model)
     updater = LSTM_updater(train_iter, optimizer, -1)
 
+    #良い結果が出そうに無いハイパーパラメーターでの学習を中断する
     stop_trigger = training.triggers.EarlyStoppingTrigger(
         monitor='validation/main/loss', check_trigger=(5, 'epoch'),
         max_trigger=(100, 'epoch'))
@@ -75,6 +77,7 @@ def objective(trial):
     test_rnn.train = False
     trainer.extend(extensions.Evaluator(test_iter, test_model, device=-1))
 
+    #十分に収束した学習の枝刈りをする
     trainer.extend(
         optuna.integration.ChainerPruningExtension(
             trial, 'validation/main/loss', (5, 'epoch')))

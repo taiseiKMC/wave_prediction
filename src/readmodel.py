@@ -59,4 +59,5 @@ serializers.load_npz("model.npz", model)
 res = predicate20Steps(train, test, model, data_max)
 test=expand(test, data_max)
 res=expand(res, data_max)
+#MSEの計算
 print(F.mean_squared_error(res[data_size:], test.reshape(-1)))

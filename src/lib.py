@@ -19,7 +19,9 @@ import math
 import functools
 import pickle
 
-
+#LSTMを複数層重ねた学習モデル
+#x_i -> Linear -> LSTM -> LSTM -> ... -> LSTM -> Linear -> output
+#listにそれぞれの層のLSTMCellの数を与える
 class Model(Chain):
     def __init__(self, list, dr=0.2, train=True):
 
@@ -69,6 +71,7 @@ class LossFuncL(Chain):
     def setdr(self,dr):
         self.predictor.dr=dr
 
+#時系列データを持ち、getdataで展開する
 class LSTM_Iterator(chainer.dataset.Iterator):
     def __init__(self, dataset, batch_size = 10, seq_len = 5, repeat = True):
         self.seq_length = seq_len
@@ -115,6 +118,7 @@ class LSTM_Iterator(chainer.dataset.Iterator):
         self.iteration = serializer('iteration', self.iteration)
         self.epoch     = serializer('epoch', self.epoch)
 
+#学習によってModelの更新を行う
 class LSTM_updater(training.StandardUpdater):
     def __init__(self, train_iter, optimizer, device):
         super(LSTM_updater, self).__init__(train_iter, optimizer, device=device)
@@ -136,6 +140,9 @@ class LSTM_updater(training.StandardUpdater):
         loss.unchain_backward()
         optimizer.update()
 
+
+
+#dataを読み込む dataの最大値で割って[0,1]にする
 def getdata():
     #normalize
     data = np.loadtxt("./output_300.txt", comments='#').astype(np.float32)
@@ -146,6 +153,7 @@ def getdata():
     data = data/data_max
     return data, data_max
 
+#[0,1]にされたデータを戻す
 def expand(data, data_max):
     #return np.exp(np.multiply(data, data_max)) - 1
     return np.multiply(data, data_max)
@@ -154,6 +162,7 @@ def compress(data, data_max):
     #return np.exp(np.multiply(data, data_max)) - 1
     return np.divide(data, data_max)
 
+#test全てを連続して予測する
 def predicateTestAll(train, test, model, data_max):
     model.predictor.reset_state()
     model.setdr(0.0)
@@ -178,7 +187,7 @@ def predicateTestAll(train, test, model, data_max):
     
     return res
 
-#seq_lenからseq_len+1を予測
+#任意の地点でseq_lenからseq_len+1を予測
 def predicateNext(data, model, seq_len, data_max):
     model.predictor.reset_state()
     model.setdr(0.0)
@@ -196,6 +205,7 @@ def predicateNext(data, model, seq_len, data_max):
 
     return res
 
+#20ステップ先まで予測する
 def predicate20Steps(train, test, model, data_max):
     model.predictor.reset_state()
     model.setdr(0.0)
